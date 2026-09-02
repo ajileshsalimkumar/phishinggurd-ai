@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishGuard AI — Phishing Detector</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background: #07111f;
+      color: #e8eef7;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid #1d3047;
+      background: rgba(7, 17, 31, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav {
+      max-width: 1150px;
+      margin: auto;
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .logo-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: #12345c;
+      font-size: 20px;
+    }
+
+    .badge {
+      color: #7dd3fc;
+      border: 1px solid #164e63;
+      background: #082f49;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    main {
+      max-width: 1150px;
+      margin: auto;
+      padding: 65px 22px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 42px;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 1;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #fff, #60a5fa, #22d3ee);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      color: #91a4bb;
+      max-width: 680px;
+      margin: auto;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .detector {
+      background: #0c1929;
+      border: 1px solid #1d344d;
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.28);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .tab {
+      border: 1px solid #253b54;
+      background: #0b1624;
+      color: #91a4bb;
+      padding: 11px 17px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: #123b68;
+      color: #fff;
+      border-color: #2563a8;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      background: #071321;
+      color: #edf6ff;
+      border: 1px solid #28425e;
+      border-radius: 13px;
+      outline: none;
+      padding: 16px;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56,189,248,.1);
+    }
+
+    .input-label {
+      display: block;
+      margin-bottom: 9px;
+      color: #c8d5e4;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .url-area,
+    .message-area {
+      display: none;
+    }
+
+    .url-area.active,
+    .message-area.active {
+      display: block;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .analyze {
+      flex: 1;
+      min-width: 180px;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #0891b2);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .analyze:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.1);
+    }
+
+    .demo {
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: 1px solid #29435f;
+      background: #0b1726;
+      color: #bcd0e5;
+      cursor: pointer;
+    }
+
+    .demo:hover {
+      background: #112238;
+    }
+
+    .privacy {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #71859d;
+    }
+
+    /* Result */
+
+    .result {
+      display: none;
+      margin-top: 28px;
+      border-top: 1px solid #1d344d;
+      padding-top: 28px;
+    }
+
+    .result.show {
+      display: block;
+      animation: appear .35s ease;
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-top {
+      display: flex;
+      gap: 25px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .score-circle {
+      width: 145px;
+      height: 145px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      position: relative;
+      background: conic-gradient(#22c55e 0deg, #182b3e 0deg);
+    }
+
+    .score-circle::before {
+      content: "";
+      position: absolute;
+      width: 112px;
+      height: 112px;
+      background: #0c1929;
+      border-radius: 50%;
+    }
+
+    .score-number {
+      position: relative;
+      text-align: center;
+      font-size: 31px;
+      font-weight: 900;
+    }
+
+    .score-number small {
+      display: block;
+      font-size: 11px;
+      color: #8095ad;
+      font-weight: 500;
+    }
+
+    .verdict {
+      flex: 1;
+    }
+
+    .verdict h2 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .verdict p {
+      color: #8da2b8;
+      line-height: 1.6;
+    }
+
+    .risk-safe {
+      color: #4ade80;
+    }
+
+    .risk-suspicious {
+      color: #facc15;
+    }
+
+    .risk-danger {
+      color: #fb7185;
+    }
+
+    .findings {
+      margin-top: 28px;
+    }
+
+    .findings h3 {
+      margin-bottom: 13px;
+    }
+
+    .finding {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: #091522;
+      border: 1px solid #1b3046;
+      border-radius: 11px;
+      margin-bottom: 9px;
+    }
+
+    .finding-icon {
+      font-size: 18px;
+    }
+
+    .finding-text strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .finding-text span {
+      color: #8297ae;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .tips {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 13px;
+      background: #0b2030;
+      border: 1px solid #16445b;
+    }
+
+    .tips h3 {
+      margin-bottom: 9px;
+    }
+
+    .tips ul {
+      padding-left: 20px;
+      color: #9db1c7;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .examples {
+      margin-top: 28px;
+    }
+
+    .examples h3 {
+      margin-bottom: 12px;
+    }
+
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .example {
+      background: #091522;
+      border: 1px solid #1d344d;
+      border-radius: 12px;
+      padding: 15px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .example:hover {
+      border-color: #3275ad;
+      transform: translateY(-2px);
+    }
+
+    .example strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .example span {
+      font-size: 12px;
+      color: #7489a0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 35px 20px;
+      color: #637990;
+      font-size: 12px;
+    }
+
+    @media(max-width: 700px) {
+      main {
+        padding-top: 40px;
+      }
+
+      .detector {
+        padding: 17px;
+      }
+
+      .example-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .score-circle {
+        width: 125px;
+        height: 125px;
+      }
+
+      .score-circle::before {
+        width: 96px;
+        height: 96px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="nav">
+    <div class="logo">
+      <div class="logo-icon">🛡️</div>
+      PhishGuard AI
+    </div>
+    <div class="badge">AI Security Scanner</div>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <h1>Detect Phishing<br>Before It Tricks You</h1>
+    <p>
+      Analyze suspicious URLs and messages using intelligent security
+      heuristics. Get an instant risk score and understand why something
+      may be dangerous.
+    </p>
+  </section>
+
+  <section class="detector">
+
+    <div class="tabs">
+      <button class="tab active" data-tab="url">🔗 URL Scanner</button>
+      <button class="tab" data-tab="message">✉️ Message Scanner</button>
+    </div>
+
+    <!-- URL Scanner -->
+
+    <div class="url-area active">
+
+      <label class="input-label">
+        Enter a URL to analyze
+      </label>
+
+      <input
+        id="urlInput"
+        type="text"
+        placeholder="https://example.com/login"
+        autocomplete="off"
+      />
+
+      <div class="action-row">
+        <button class="analyze" onclick="analyzeURL()">
+          🔍 Analyze URL
+        </button>
+
+        <button class="demo" onclick="loadURLDemo()">
+          Try Demo
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Message Scanner -->
+
+    <div class="message-area">
+
+      <label class="input-label">
+        Paste an email or message
+      </label>
+
+      <textarea
+        id="messageInput"
+        placeholder="Paste suspicious email or message here..."
+      ></textarea>
+
+      <div class="action-row">
+        <button class="analyze" onclick="analyzeMessage()">
+          🤖 Analyze Message
+        </button>
+
+        <button class="demo" onclick="loadMessageDemo()">
+          Try Demo
+        </button>
+      </div>
+
+    </div>
+
+    <div class="privacy">
+      🔒 Your input is analyzed locally in this demo. Never enter passwords,
+      OTPs, card numbers, or other sensitive information.
+    </div>
+
+    <!-- Results -->
+
+    <div class="result" id="result">
+
+      <div class="result-top">
+
+        <div class="score-circle" id="scoreCircle">
+
+          <div class="score-number">
+            <span id="score">0</span>
+            <small>RISK SCORE</small>
+          </div>
+
+        </div>
+
+        <div class="verdict">
+
+          <h2 id="verdict">
+            Analysis
+          </h2>
+
+          <p id="summary">
+            Results will appear here.
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="findings">
+
+        <h3>🔎 Security Findings</h3>
+
+        <div id="findingsList"></div>
+
+      </div>
+
+      <div class="tips">
+
+        <h3>🛡️ Safety Recommendation</h3>
+
+        <ul id="tipsList"></ul>
+
+      </div>
+
+    </div>
+
+    <div class="examples">
+
+      <h3>Quick Examples</h3>
+
+      <div class="example-grid">
+
+        <div class="example" onclick="setURL('https://www.google.com')">
+          <strong>🟢 Normal URL</strong>
+          <span>Try a common trusted domain</span>
+        </div>
+
+        <div class="example" onclick="setURL('http://secure-login-account.example.com')">
+          <strong>🟡 Suspicious URL</strong>
+          <span>Look for unusual URL patterns</span>
+        </div>
+
+        <div class="example" onclick="setMessage()">
+          <strong>🔴 Phishing Message</strong>
+          <span>Try a simulated scam message</span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  PhishGuard AI • Educational Security Tool • Always verify suspicious links independently.
+</footer>
+
+
+<script>
+
+  /* -------------------------
+     TAB SYSTEM
+  ------------------------- */
+
+  const tabs = document.querySelectorAll(".tab");
+
+  tabs.forEach(tab => {
+
+    tab.addEventListener("click", () => {
+
+      tabs.forEach(t => t.classList.remove("active"));
+
+      tab.classList.add("active");
+
+      const selected = tab.dataset.tab;
+
+      document.querySelector(".url-area")
+        .classList.toggle("active", selected === "url");
+
+      document.querySelector(".message-area")
+        .classList.toggle("active", selected === "message");
+
+      document.getElementById("result")
+        .classList.remove("show");
+
+    });
+
+  });
+
+
+  /* -------------------------
+     URL ANALYZER
+  ------------------------- */
+
+  function analyzeURL() {
+
+    const input = document.getElementById("urlInput");
+
+    const value = input.value.trim();
+
+    if (!value) {
+      alert("Please enter a URL.");
+      return;
+    }
+
+    let score = 0;
+
+    const findings = [];
+
+    let parsed;
+
+    try {
+
+      let normalized = value;
+
+      if (!/^https?:\/\//i.test(normalized)) {
+        normalized = "http://" + normalized;
+      }
+
+      parsed = new URL(normalized);
+
+    } catch {
+
+      showResults(
+        75,
+        "Invalid or suspicious URL",
+        "The URL could not be parsed normally. Be careful before opening it.",
+        [{
+          icon: "⚠️",
+          title: "Malformed URL",
+          text: "The address does not follow a normal URL structure."
+        }]
+      );
+
+      return;
+    }
+
+
+    const hostname = parsed.hostname.toLowerCase();
+
+    const fullURL = parsed.href.toLowerCase();
+
+
+    /* HTTPS */
+
+    if (parsed.protocol !== "https:") {
+
+      score += 15;
+
+      findings.push({
+        icon: "⚠️",
+        title: "No HTTPS",
+        text: "The connection does not use HTTPS."
+      });
+
+    }
+
+
+    /* IP address */
+
+    const ipPattern =
+      /^(?:\d{1,3}\.){3}\d{1,3}$/;
+
+    if (ipPattern.test(hostname)) {
+
+      score += 25;
+
+      findings.push({
+        icon: "🚨",
+        title: "IP address used",
+        text: "The URL uses an IP address instead of a normal domain."
+      });
+
+    }
+
+
+    /* @ symbol */
+
+    if (fullURL.includes("@")) {
+
+      score += 25;
+
+      findings.push({
+        icon: "🚨",
+        title: "@ symbol detected",
+        text: "The @ symbol can be abused to disguise the actual destination."
+      });
+
+    }
+
+
+    /* Excessive subdomains */
+
+    const parts = hostname.split(".");
+
+    if (parts.length >= 5) {
+
+      score += 15;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Many subdomains",
+        text: "The domain contains an unusually large number of subdomains."
+      });
+
+    }
+
+
+    /* Suspicious keywords */
+
+    const keywords = [
+      "login",
+      "verify",
+      "verification",
+      "secure",
+      "account",
+      "update",
+      "password",
+      "bank",
+      "wallet",
+      "claim",
+      "reward",
+      "gift",
+      "confirm",
+      "unlock"
+    ];
+
+    const foundKeywords =
+      keywords.filter(word => hostname.includes(word));
+
+    if (foundKeywords.length > 0) {
+
+      score += Math.min(foundKeywords.length * 8, 25);
+
+      findings.push({
+        icon: "⚠️",
+        title: "Security-related keywords",
+        text:
+          "The domain contains: " +
+          foundKeywords.join(", ") +
+          "."
+      });
+
+    }
+
+
+    /* Long URL */
+
+    if (value.length > 100) {
+
+      score += 10;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Unusually long URL",
+        text: "Long URLs can sometimes be used to hide suspicious destinations."
+      });
+
+    }
+
+
+    /* Hyphens */
+
+    const hyphens =
+      (hostname.match(/-/g) || []).length;
+
+    if (hyphens >= 3) {
+
+      score += 12;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Multiple hyphens",
+        text: "The domain contains several hyphens, which can occur in deceptive domains."
+      });
+
+    }
+
+
+    /* Punycode */
+
+    if (hostname.includes("xn--")) {
+
+      score += 25;
+
+      findings.push({
+        icon: "🚨",
+        title: "Punycode domain",
+        text: "Internationalized domain encoding can sometimes be abused for look-alike domains."
+      });
+
+    }
+
+
+    /* URL encoding */
+
+    const encoded =
+      (value.match(/%[0-9a-f]{2}/gi) || []).length;
+
+    if (encoded >= 4) {
+
+      score += 10;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Heavy URL encoding",
+        text: "The URL contains many encoded characters."
+      });
+
+    }
+
+
+    /* Suspicious TLDs */
+
+    const suspiciousTLDs = [
+      ".zip",
+      ".click",
+      ".top",
+      ".work",
+      ".buzz",
+      ".country"
+    ];
+
+    if (
+      suspiciousTLDs.some(tld =>
+        hostname.endsWith(tld)
+      )
+    ) {
+
+      score += 15;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Higher-risk domain ending",
+        text: "This domain ending deserves additional verification."
+      });
+
+    }
+
+
+    score = Math.min(score, 100);
+
+
+    if (findings.length === 0) {
+
+      findings.push({
+        icon: "✅",
+        title: "No obvious red flags",
+        text: "The URL does not match the basic phishing patterns checked by this demo."
+      });
+
+    }
+
+
+    showResults(
+      score,
+      getVerdict(score),
+      getSummary(score),
+      findings
+    );
+
+  }
+
+
+  /* -------------------------
+     MESSAGE ANALYZER
+  ------------------------- */
+
+  function analyzeMessage() {
+
+    const input =
+      document.getElementById("messageInput");
+
+    const message =
+      input.value.trim();
+
+    if (!message) {
+
+      alert("Please paste a message.");
+
+      return;
+    }
+
+    let score = 0;
+
+    const findings = [];
+
+    const text = message.toLowerCase();
+
+
+    /* Urgency */
+
+    const urgencyWords = [
+      "urgent",
+      "immediately",
+      "now",
+      "within 24 hours",
+      "act now",
+      "final warning",
+      "expires today"
+    ];
+
+    const urgencyFound =
+      urgencyWords.filter(word =>
+        text.includes(word)
+      );
+
+    if (urgencyFound.length) {
+
+      score += 20;
+
+      findings.push({
+        icon: "🚨",
+        title: "Urgency or pressure",
+        text: "The message tries to make the recipient act quickly."
+      });
+
+    }
+
+
+    /* Credential requests */
+
+    const credentialWords = [
+      "password",
+      "otp",
+      "one time password",
+      "verification code",
+      "login",
+      "sign in",
+      "account details"
+    ];
+
+    const credentialFound =
+      credentialWords.filter(word =>
+        text.includes(word)
+      );
+
+    if (credentialFound.length) {
+
+      score += 25;
+
+      findings.push({
+        icon: "🚨",
+        title: "Credential-related language",
+        text: "The message refers to login information or verification codes."
+      });
+
+    }
+
+
+    /* Money */
+
+    const moneyWords = [
+      "payment",
+      "money",
+      "refund",
+      "prize",
+      "reward",
+      "cash",
+      "bank",
+      "transfer"
+    ];
+
+    const moneyFound =
+      moneyWords.filter(word =>
+        text.includes(word)
+      );
+
+    if (moneyFound.length) {
+
+      score += 15;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Financial language",
+        text: "The message contains financial or reward-related language."
+      });
+
+    }
+
+
+    /* Links */
+
+    const links =
+      message.match(/https?:\/\/[^\s]+/gi);
+
+    if (links && links.length) {
+
+      score += 15;
+
+      findings.push({
+        icon: "🔗",
+        title: "Link detected",
+        text: "The message contains a clickable web address. Verify it independently."
+      });
+
+    }
+
+
+    /* Threats */
+
+    const threatWords = [
+      "suspended",
+      "blocked",
+      "closed",
+      "legal action",
+      "penalty",
+      "warning"
+    ];
+
+    if (
+      threatWords.some(word =>
+        text.includes(word)
+      )
+    ) {
+
+      score += 15;
+
+      findings.push({
+        icon: "🚨",
+        title: "Threatening language",
+        text: "The message may use fear or consequences to pressure the recipient."
+      });
+
+    }
+
+
+    /* Too many exclamation marks */
+
+    const exclamations =
+      (message.match(/!/g) || []).length;
+
+    if (exclamations >= 3) {
+
+      score += 8;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Aggressive formatting",
+        text: "The message uses multiple exclamation marks."
+      });
+
+    }
+
+
+    /* Generic greeting */
+
+    if (
+      /dear customer|dear user|valued customer/i.test(message)
+    ) {
+
+      score += 8;
+
+      findings.push({
+        icon: "⚠️",
+        title: "Generic greeting",
+        text: "The sender uses a generic greeting instead of identifying you specifically."
+      });
+
+    }
+
+
+    score = Math.min(score, 100);
+
+
+    if (!findings.length) {
+
+      findings.push({
+        icon: "✅",
+        title: "No major red flags detected",
+        text: "This message did not trigger the basic phishing patterns in this demo."
+      });
+
+    }
+
+
+    showResults(
+      score,
+      getVerdict(score),
+      getSummary(score),
+      findings
+    );
+
+  }
+
+
+  /* -------------------------
+     RESULT DISPLAY
+  ------------------------- */
+
+  function getVerdict(score) {
+
+    if (score >= 70)
+      return "🔴 High Risk — Likely Phishing";
+
+    if (score >= 40)
+      return "🟡 Suspicious";
+
+    return "🟢 Low Risk";
+
+  }
+
+
+  function getSummary(score) {
+
+    if (score >= 70) {
+
+      return "Several indicators associated with phishing were detected. Do not interact with the suspicious content until you independently verify it.";
+
+    }
+
+    if (score >= 40) {
+
+      return "Some suspicious characteristics were detected. Treat this content carefully and verify the sender or website through an independent source.";
+
+    }
+
+    return "No major phishing indicators were detected by this demo. A low score does not guarantee that content is safe.";
+
+  }
+
+
+  function showResults(
+    score,
+    verdict,
+    summary,
+    findings
+  ) {
+
+    const result =
+      document.getElementById("result");
+
+    const scoreElement =
+      document.getElementById("score");
+
+    const verdictElement =
+      document.getElementById("verdict");
+
+    const summaryElement =
+      document.getElementById("summary");
+
+    const circle =
+      document.getElementById("scoreCircle");
+
+    const list =
+      document.getElementById("findingsList");
+
+    scoreElement.textContent = score;
+
+    verdictElement.textContent = verdict;
+
+    summaryElement.textContent = summary;
+
+
+    verdictElement.className = "";
+
+    if (score >= 70)
+      verdictElement.classList.add("risk-danger");
+    else if (score >= 40)
+      verdictElement.classList.add("risk-suspicious");
+    else
+      verdictElement.classList.add("risk-safe");
+
+
+    let degree = score * 3.6;
+
+    let color =
+      score >= 70
+        ? "#fb7185"
+        : score >= 40
+          ? "#facc15"
+          : "#22c55e";
+
+    circle.style.background =
+      `conic-gradient(${color} ${degree}deg, #182b3e ${degree}deg)`;
+
+
+    list.innerHTML = findings.map(item => `
+
+      <div class="finding">
+
+        <div class="finding-icon">
+          ${item.icon}
+        </div>
+
+        <div class="finding-text">
+
+          <strong>${escapeHTML(item.title)}</strong>
+
+          <span>
+            ${escapeHTML(item.text)}
+          </span>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+
+    const tips =
+      document.getElementById("tipsList");
+
+
+    let recommendations;
+
+
+    if (score >= 70) {
+
+      recommendations = [
+        "Do not click links or download attachments.",
+        "Do not provide passwords, OTPs, or payment information.",
+        "Verify the sender using an official website or known contact method.",
+        "Report the suspicious message to the relevant service."
+      ];
+
+    } else if (score >= 40) {
+
+      recommendations = [
+        "Verify the domain carefully before continuing.",
+        "Avoid entering credentials from links in unexpected messages.",
+        "Contact the organization through an independently verified channel."
+      ];
+
+    } else {
+
+      recommendations = [
+        "Continue to check the sender and domain.",
+        "Keep your browser and security software updated.",
+        "Remember that automated detection cannot guarantee safety."
+      ];
+
+    }
+
+
+    tips.innerHTML =
+      recommendations.map(t =>
+        `<li>${escapeHTML(t)}</li>`
+      ).join("");
+
+
+    result.classList.add("show");
+
+    result.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    });
+
+  }
+
+
+  /* -------------------------
+     DEMO FUNCTIONS
+  ------------------------- */
+
+  function loadURLDemo() {
+
+    document.getElementById("urlInput").value =
+      "http://secure-login-account.example.com/verify";
+
+    analyzeURL();
+
+  }
+
+
+  function loadMessageDemo() {
+
+    document.getElementById("messageInput").value =
+      "URGENT! Your account has been suspended. Verify your password and login immediately using the link below. Your account will be closed within 24 hours!";
+
+    analyzeMessage();
+
+  }
+
+
+  function setURL(url) {
+
+    document.querySelector('[data-tab="url"]').click();
+
+    document.getElementById("urlInput").value = url;
+
+    analyzeURL();
+
+  }
+
+
+  function setMessage() {
+
+    document.querySelector('[data-tab="message"]').click();
+
+    loadMessageDemo();
+
+  }
+
+
+  /* -------------------------
+     SECURITY
+  ------------------------- */
+
+  function escapeHTML(value) {
+
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  }
+
+</script>
+
+</body>
+</html>
